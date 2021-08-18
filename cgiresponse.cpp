@@ -6,7 +6,6 @@
 #include <QFile>
 #include <QCoreApplication>
 #include <QtMath>
-
 CGIResponse::CGIResponse(QObject *parent) : QObject(parent)
 {
 
@@ -27,10 +26,18 @@ void CGIResponse::doResponse()
     int southOffX = uq.queryItemValue( "sofx" ).toUInt();
     int southOffY = uq.queryItemValue( "sofy" ).toUInt();
     int mirror = uq.queryItemValue( "mir" ).toUInt();
+    int drawName    = uq.queryItemValue( "name" ).toUInt();
+    int drawConste  = uq.queryItemValue( "conste" ).toUInt();
+    int drawMessier = uq.queryItemValue( "messier" ).toUInt();
+    int drawObsLine = uq.queryItemValue( "obsline" ).toUInt();
 
-    if ( mirror != 0 ) {
-        mirror = 1;
-    }
+    // roundup
+    eng = qMax( 0, eng );
+    mirror = qMax( 0, mirror );
+    drawName = qMax( 0, drawName );
+    drawConste = qMax( 0, drawConste );
+    drawMessier = qMax( 0, drawMessier );
+    drawObsLine = qMax( 0, drawObsLine );
 
     if ( deRep <= 1 ) {
         deRep = 1;
