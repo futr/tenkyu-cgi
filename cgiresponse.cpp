@@ -26,6 +26,11 @@ void CGIResponse::doResponse()
     int deRep = uq.queryItemValue( "derep" ).toUInt();
     int southOffX = uq.queryItemValue( "sofx" ).toUInt();
     int southOffY = uq.queryItemValue( "sofy" ).toUInt();
+    int mirror = uq.queryItemValue( "mir" ).toUInt();
+
+    if ( mirror != 0 ) {
+        mirror = 1;
+    }
 
     if ( deRep <= 1 ) {
         deRep = 1;
@@ -64,6 +69,7 @@ void CGIResponse::doResponse()
     cp.deRepeatCount = deRep;
     cp.southOffsetMm = QPointF( southOffX, southOffY );
     cp.starSize = starSize;
+    cp.inv = mirror ? true : false;
 
     // Generate pdf
     QBuffer buf;
