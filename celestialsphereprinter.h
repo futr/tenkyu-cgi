@@ -89,7 +89,7 @@ public:
     QColor bgColor        = QColor( Qt::white );
     QColor starColor      = QColor( Qt::blue );
     QColor consteColor    = QColor( Qt::red );
-    QColor messierColor   = QColor( QColorConstants::Svg::darkviolet );
+    QColor messierColor   = QColor( "#9400d3" );
     QColor obsPointColor  = QColor( Qt::darkGreen );
     QColor infoStrColor   = QColor( Qt::black );
     QColor starNameColor  = QColor( Qt::black );
