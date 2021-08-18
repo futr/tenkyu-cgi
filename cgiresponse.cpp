@@ -20,6 +20,10 @@ void CGIResponse::doResponse()
     double radius = uq.queryItemValue( "radius" ).toDouble();
     double mag    = uq.queryItemValue( "mag" ).toDouble();
     double starSize = uq.queryItemValue( "ssize" ).toDouble();
+    double starNameSize = uq.queryItemValue( "snsize" ).toDouble();
+    double consteNameSize = uq.queryItemValue( "cnsize" ).toDouble();
+    double messierNameSize = uq.queryItemValue( "mnsize" ).toDouble();
+    double infoStrSize = uq.queryItemValue( "infosize" ).toDouble();
     int lat   = uq.queryItemValue( "lat" ).toDouble();
     int eng   = uq.queryItemValue( "eng" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
@@ -38,6 +42,11 @@ void CGIResponse::doResponse()
     drawConste = qMax( 0, drawConste );
     drawMessier = qMax( 0, drawMessier );
     drawObsLine = qMax( 0, drawObsLine );
+
+    starNameSize = qMax( 0.0, starNameSize );
+    consteNameSize = qMax( 0.0, consteNameSize );
+    messierNameSize = qMax( 0.0, messierNameSize );
+    infoStrSize = qMax( 0.0, infoStrSize );
 
     if ( deRep <= 1 ) {
         deRep = 1;
@@ -77,6 +86,10 @@ void CGIResponse::doResponse()
     cp.southOffsetMm = QPointF( southOffX, southOffY );
     cp.starSize = starSize;
     cp.inv = mirror ? true : false;
+    cp.starNamePoint = starNameSize;
+    cp.consteNamePoint = consteNameSize;
+    cp.messierNamePoint = messierNameSize;
+    cp.infoStrPoint = infoStrSize;
 
     // Generate pdf
     QBuffer buf;
