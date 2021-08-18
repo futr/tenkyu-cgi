@@ -1365,7 +1365,11 @@ void CelestialSpherePrinter::drawCreditText(QPainter *p, QPointF offsetMm, int d
 {
     auto creditText = getCreditText();
     QTextDocument doc;
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
     doc.setMarkdown( creditText );
+#else
+    doc.setPlainText( creditText );
+#endif
 
     p->save();
     QRectF r = p->window();
