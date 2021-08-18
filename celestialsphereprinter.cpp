@@ -1,6 +1,5 @@
 #include "celestialsphereprinter.h"
 #include <QDateTime>
-#include <QPrinter>
 #include <QtMath>
 #include <QTextDocument>
 #include <QPdfWriter>
