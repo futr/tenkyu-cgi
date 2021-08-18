@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/data">
+        <file alias="position.csv">data/new-starmaps/position.csv</file>
+        <file alias="messier.csv">data/new-starmaps/messier.csv</file>
+        <file alias="line.csv">data/new-starmaps/line.csv</file>
+        <file alias="hip_lite_b.csv">data/new-starmaps/hip_lite_b.csv</file>
+        <file alias="hip_lite_a.csv">data/new-starmaps/hip_lite_a.csv</file>
+        <file alias="hip_100.csv">data/new-starmaps/hip_100.csv</file>
+        <file alias="constellation_name_utf8.csv">data/new-starmaps/constellation_name_utf8.csv</file>
+    </qresource>
+</RCC>
