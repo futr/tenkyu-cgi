@@ -86,6 +86,10 @@ void CGIResponse::doResponse()
     cp.southOffsetMm = QPointF( southOffX, southOffY );
     cp.starSize = starSize;
     cp.inv = mirror ? true : false;
+    cp.printStarNames = drawName ? true : false;
+    cp.printConstellations = drawConste ? true : false;
+    cp.printMessiers = drawMessier ? true : false;
+    cp.printObsPointLine = drawObsLine ? true : false;
     cp.starNamePoint = starNameSize;
     cp.consteNamePoint = consteNameSize;
     cp.messierNamePoint = messierNameSize;
