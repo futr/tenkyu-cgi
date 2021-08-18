@@ -44,14 +44,14 @@ bool StarMap::openDir(QString dirName)
 
     s.setDevice( &hipAFile );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto star = readStarDataLine( lineData );
         starHash.insert( star.id, star );
     }
 
     s.setDevice( &hipBFile );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto star = readStarDataLine( lineData );
         starHash.insert( star.id, star );
     }
@@ -62,7 +62,7 @@ bool StarMap::openDir(QString dirName)
     s.setDevice( &hip100File );
     s.setCodec( "UTF-8" );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto star = readStarDataLine( lineData );
         starHash.insert( star.id, star );
         famousStarHash.insert( star.id, star );
@@ -80,7 +80,7 @@ bool StarMap::openDir(QString dirName)
 
     s.setDevice( &constePosFile );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto conste = readConstePosLine( lineData );
         consteHash.insert( conste.id, conste );
     }
@@ -88,7 +88,7 @@ bool StarMap::openDir(QString dirName)
     s.setDevice( &consteNameFile );
     s.setCodec( "UTF-8" );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto conste = readConsteNameLine( lineData );
 
         if ( consteHash.contains( conste.id ) ) {
@@ -99,7 +99,7 @@ bool StarMap::openDir(QString dirName)
 
     s.setDevice( &consteLinesFile );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto consteLine = readConsteLineLine( lineData );
         consteLineList << consteLine;
     }
@@ -110,7 +110,7 @@ bool StarMap::openDir(QString dirName)
     s.setDevice( &messierFile );
     s.setCodec( "UTF-8" );
     while ( !s.atEnd() ) {
-        QStringList lineData = s.readLine().split( ',', Qt::SkipEmptyParts );
+        QStringList lineData = getLineData( s.readLine() );
         auto messier = readMessierDataLine( lineData );
         messierList << messier;
     }
@@ -265,6 +265,15 @@ StarData StarMap::readMessierDataLine(QStringList line)
     }
 
     return ret;
+}
+
+QStringList StarMap::getLineData(const QString &s)
+{
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 14, 0))
+    return s.split( ',', Qt::SkipEmptyParts );
+#else
+    return s.split( ',', QString::SkipEmptyParts );
+#endif
 }
 
 CelestialPos::CelestialPos()

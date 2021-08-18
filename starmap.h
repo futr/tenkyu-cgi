@@ -68,6 +68,7 @@ private:
     ConstellationData readConsteNameLine( QStringList line );
     CelestialLine readConsteLineLine( QStringList line );
     StarData readMessierDataLine( QStringList line );
+    QStringList getLineData( const QString &s );
 
 public:
     QHash<int, StarData> starHash;
