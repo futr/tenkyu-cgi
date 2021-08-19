@@ -78,6 +78,7 @@ void CGIResponse::doResponse()
     southOffY = qMax( -300, southOffY );
 
     cp.radius = radius;
+    cp.raSplit = raSplit;
     cp.maxMagnitude = mag;
     cp.obsLatitude = lat;
     cp.useAlphabetText = eng ? true : false;
