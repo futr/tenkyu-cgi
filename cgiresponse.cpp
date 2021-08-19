@@ -26,6 +26,7 @@ void CGIResponse::doResponse()
     double infoStrSize = uq.queryItemValue( "infosize" ).toDouble();
     int lat   = uq.queryItemValue( "lat" ).toDouble();
     int eng   = uq.queryItemValue( "eng" ).toUInt();
+    int raSplit = uq.queryItemValue( "split" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
     int southOffX = uq.queryItemValue( "sofx" ).toUInt();
     int southOffY = uq.queryItemValue( "sofy" ).toUInt();
@@ -48,13 +49,17 @@ void CGIResponse::doResponse()
     messierNameSize = qMax( 0.0, messierNameSize );
     infoStrSize = qMax( 0.0, infoStrSize );
 
+    if ( raSplit < 1 || raSplit > 64 ) {
+        raSplit = cp.raSplit;
+    }
+
     if ( deRep <= 1 ) {
         deRep = 1;
     } else {
         deRep = 2;
     }
 
-    if ( radius < 10 || radius > 300) {
+    if ( radius < 10 || radius > 300 ) {
         radius = cp.radius;
     }
 
@@ -87,6 +92,8 @@ void CGIResponse::doResponse()
     cp.starSize = starSize;
     cp.inv = mirror ? true : false;
     cp.printStarNames = drawName ? true : false;
+    cp.printMessierName = cp.printStarNames;
+    cp.printConsteName  = cp.printStarNames;
     cp.printConstellations = drawConste ? true : false;
     cp.printMessiers = drawMessier ? true : false;
     cp.printObsPointLine = drawObsLine ? true : false;
