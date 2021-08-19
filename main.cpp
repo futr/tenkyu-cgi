@@ -1,5 +1,7 @@
 #include <QGuiApplication>
 #include <QFontDatabase>
+#include <QThread>
+#include <QTimer>
 #include "cgiresponse.h"
 
 // https://stackoverflow.com/questions/40313476/qpainterdrawtext-seg-faults-in-initializedb
@@ -29,15 +31,26 @@ int main(int argc, char *argv[])
         newArgv[i] = argList[i].data();
     }
 
-    // Setup font
-    // QFontDatabase::addApplicationFont("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf");
-    // qputenv("QT_QPA_FONTDIR", "/usr/share/fonts/truetype/dejavu/");
-
     QGuiApplication a(newArgc, newArgv);
+    QThread cgiThread( &a );
+    auto cgi = new CGIResponse();
 
-    CGIResponse cgi;
+    // CGI runs on a thread
+    cgi->moveToThread( &cgiThread );
+    cgiThread.start();
 
-    QMetaObject::invokeMethod( &cgi, &CGIResponse::doResponse, Qt::QueuedConnection );
+    // Invoke CGI response
+    QMetaObject::invokeMethod( cgi, &CGIResponse::doResponse, Qt::QueuedConnection );
 
-    return a.exec();
+    // Set watchdog timer
+    QTimer::singleShot( 10000, &a, &QGuiApplication::quit );
+
+    // Start main message loop
+    auto ret = a.exec();
+
+    // Stop CGI thread
+    cgiThread.quit();
+    cgiThread.wait( 100 );
+
+    return ret;
 }

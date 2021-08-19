@@ -44,14 +44,12 @@ void CGIResponse::doResponse()
     drawMessier = qMax( 0, drawMessier );
     drawObsLine = qMax( 0, drawObsLine );
 
-    starNameSize = qMax( 0.0, starNameSize );
-    consteNameSize = qMax( 0.0, consteNameSize );
-    messierNameSize = qMax( 0.0, messierNameSize );
-    infoStrSize = qMax( 0.0, infoStrSize );
+    if ( starNameSize    < 1 || starNameSize    > 50 ) starNameSize = cp.starNamePoint;
+    if ( consteNameSize  < 1 || consteNameSize  > 50 ) consteNameSize = cp.consteNamePoint;
+    if ( messierNameSize < 1 || messierNameSize > 50 ) messierNameSize = cp.messierNamePoint;
+    if ( infoStrSize     < 1 || infoStrSize     > 50 ) infoStrSize = cp.infoStrPoint;
 
-    if ( raSplit < 1 || raSplit > 64 ) {
-        raSplit = cp.raSplit;
-    }
+    if ( raSplit < 1 || raSplit > 64 ) raSplit = cp.raSplit;
 
     if ( deRep <= 1 ) {
         deRep = 1;
@@ -59,13 +57,9 @@ void CGIResponse::doResponse()
         deRep = 2;
     }
 
-    if ( radius < 10 || radius > 300 ) {
-        radius = cp.radius;
-    }
+    if ( radius < 10 || radius > 300 ) radius = cp.radius;
+    if ( starSize <= 0 || starSize > 100 ) starSize = cp.starSize;
 
-    if ( starSize <= 0 || starSize > 100 ) {
-        starSize = cp.starSize;
-    }
     if ( lat > 90 ) {
         lat = 90;
     } else if ( lat < -90 ) {
@@ -144,3 +138,4 @@ void CGIResponse::doResponse()
     // Send quit
     QCoreApplication::quit();
 }
+
