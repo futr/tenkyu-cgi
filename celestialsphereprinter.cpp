@@ -50,6 +50,9 @@ QString CelestialSpherePrinter::getCreditText()
 * 設計 : 高橋徹
 * プログラム作成 : 高橋昌土 (ilce.ma@gmail.com)
 
+## 鏡像天球儀について
+https://tohru-t.github.io/uragaeshi-tenkyugi/
+
 # 使用データについて
 鏡像天球儀は「Astro Commons」さんから取得させていただいたデータを使用して作図しています。
 
@@ -438,12 +441,12 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             double dtheta = rp.x();
             double phi = rp.y();
 
-            drawStringOnFune( painter, useAlphabetText ? star.nameEng : star.name, spen, font, false, printNameUnderLine, false, 10, QPointF( 1.5, 0.1 ), dePos, dtheta, phi, dpi, segOffsetMm );
+            drawStringOnFune( painter, useAlphabetText ? star.nameEng : star.name, spen, font, false, printNameUnderLine, false, 10, starNameOffsetOnFuneMm, dePos, dtheta, phi, dpi, segOffsetMm );
         }
     }
 
     // Draw contellation names
-    if ( printStarNames && printConstellations ) {
+    if ( printConsteName && printConstellations ) {
         QPen spen = painter->pen();
         QFont font = painter->font();
         spen.setColor( consteColor );
@@ -460,12 +463,12 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             double dtheta = rp.x();
             double phi = rp.y();
 
-            drawStringOnFune( painter, useAlphabetText ? conste.nameEng : conste.name, spen, font, false, false, false, 10, QPointF( 0, 0 ), dePos, dtheta, phi, dpi, segOffsetMm );
+            drawStringOnFune( painter, useAlphabetText ? conste.nameEng : conste.name, spen, font, false, false, false, 10, consteNameOffsetOnFuneMm, dePos, dtheta, phi, dpi, segOffsetMm );
         }
     }
 
     // Draw messier names
-    if ( printStarNames && printMessiers ) {
+    if ( printMessierName && printMessiers ) {
         QPen spen = painter->pen();
         QFont font = painter->font();
         // spen.setBrush( Qt::SolidPattern );
@@ -483,83 +486,52 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             double dtheta = rp.x();
             double phi = rp.y();
 
-            drawStringOnFune( painter, useAlphabetText ? m.nameEng : m.name, spen, font, false, false, false, 10, QPointF( 1, 0 ), dePos, dtheta, phi, dpi, segOffsetMm );
+            drawStringOnFune( painter, useAlphabetText ? m.nameEng : m.name, spen, font, false, false, false, 10, messierNameOffsetOnFuneMm, dePos, dtheta, phi, dpi, segOffsetMm );
         }
     }
 
-    // Draw RA info text
-    pen = painter->pen();
-    font = painter->font();
-    pen.setColor( infoStrColor );
-    pen.setStyle( Qt::SolidLine );
-    font.setPointSizeF( infoStrPoint );
+    // Draw coordinate info text
+    if ( printCoordinateText ) {
+        // Draw RA info text
+        pen = painter->pen();
+        font = painter->font();
+        pen.setColor( infoStrColor );
+        pen.setStyle( Qt::SolidLine );
+        font.setPointSizeF( infoStrPoint );
 
-    for ( int i = 0; i < 360 / raSplit / RAGridWidth; i++ ) {
-        int raH  = i + minRA / 15;
-        int raBase8H = raH - 8;
+        for ( int i = 0; i < 360 / raSplit / RAGridWidth; i++ ) {
+            int raH  = i + minRA / 15;
+            int raBase8H = raH - 8;
 
-        if ( raBase8H < 0 ) {
-            raBase8H = 24 + raBase8H;
-        }
-
-        int raMonth  = raBase8H / 2 + 3;
-        int timeBase = raBase8H % 2;
-
-        if ( raMonth > 12 ) {
-            raMonth = raMonth - 12;
-        }
-
-        auto raHStr = tr( "%1h" ).arg( raH );
-        QString raDateStr;
-
-        if ( useAlphabetText ) {
-            raDateStr = tr( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
-        } else {
-            raDateStr = tr( "%1/20 %2時" ).arg( raMonth ).arg( timeBase + 20 );
-        }
-
-        auto rp = radianPosOnFune( centerRA, raH * 15, 0, inv );
-        double dtheta = rp.x();
-        double phi = rp.y();
-        auto px = mmPosOnFuneToPrintPos( mmPosOnFune( dtheta, phi ), dpi, dePos, segOffsetMm );
-
-        int alignH;
-        QPointF offset;
-
-        if ( inv ) {
-            alignH = Qt::AlignRight;
-            offset = QPointF( -2, 0 );
-        } else {
-            alignH = Qt::AlignLeft;
-            offset = QPointF( 2, 0 );
-        }
-
-        if ( isNorth( dePos ) ) {
-            drawStringRawPxAling( painter, raHStr, pen, font, Qt::AlignBottom | alignH, false, px, 0, offset );
-        } else {
-            drawStringRawPxAling( painter, raDateStr, pen, font, Qt::AlignTop | alignH, false, px, 0, offset );
-        }
-    }
-
-    // Draw Dec info txt
-    if ( raPos == 0 ) {
-        for ( int i = 0; i < 90; i += 10 ) {
-            double dec;
-
-            if ( isNorth( dePos ) ) {
-                dec = i;
-            } else {
-                dec = -i;
+            if ( raBase8H < 0 ) {
+                raBase8H = 24 + raBase8H;
             }
 
-            QString latStr = QString( "%1°" ).arg( static_cast<int>( dec ) );
+            int raMonth  = raBase8H / 2 + 3;
+            int timeBase = raBase8H % 2;
 
-            auto px = mmPosOnFuneToPrintPos( mmPosOnFune( 0, qDegreesToRadians( dec ) ), dpi, dePos, segOffsetMm );
+            if ( raMonth > 12 ) {
+                raMonth = raMonth - 12;
+            }
+
+            auto raHStr = tr( "%1h" ).arg( raH );
+            QString raDateStr;
+
+            if ( useAlphabetText ) {
+                raDateStr = tr( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
+            } else {
+                raDateStr = tr( "%1/20 %2時" ).arg( raMonth ).arg( timeBase + 20 );
+            }
+
+            auto rp = radianPosOnFune( centerRA, raH * 15, 0, inv );
+            double dtheta = rp.x();
+            double phi = rp.y();
+            auto px = mmPosOnFuneToPrintPos( mmPosOnFune( dtheta, phi ), dpi, dePos, segOffsetMm );
 
             int alignH;
             QPointF offset;
 
-            if ( !inv ) {
+            if ( inv ) {
                 alignH = Qt::AlignRight;
                 offset = QPointF( -2, 0 );
             } else {
@@ -567,29 +539,64 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
                 offset = QPointF( 2, 0 );
             }
 
-            pen = painter->pen();
-            font = painter->font();
-            pen.setColor( infoStrColor );
-            pen.setStyle( Qt::SolidLine );
-            font.setPointSizeF( infoStrPoint );
-            drawStringRawPxAling( painter, latStr, pen, font, alignH | Qt::AlignBottom, false, px, 0, offset );
+            if ( isNorth( dePos ) ) {
+                drawStringRawPxAling( painter, raHStr, pen, font, Qt::AlignBottom | alignH, false, px, 0, offset );
+            } else {
+                drawStringRawPxAling( painter, raDateStr, pen, font, Qt::AlignTop | alignH, false, px, 0, offset );
+            }
+        }
+
+        // Draw Dec info txt
+        if ( raPos == 0 ) {
+            for ( int i = 0; i < 90; i += 10 ) {
+                double dec;
+
+                if ( isNorth( dePos ) ) {
+                    dec = i;
+                } else {
+                    dec = -i;
+                }
+
+                QString latStr = QString( "%1°" ).arg( static_cast<int>( dec ) );
+
+                auto px = mmPosOnFuneToPrintPos( mmPosOnFune( 0, qDegreesToRadians( dec ) ), dpi, dePos, segOffsetMm );
+
+                int alignH;
+                QPointF offset;
+
+                if ( !inv ) {
+                    alignH = Qt::AlignRight;
+                    offset = QPointF( -2, 0 );
+                } else {
+                    alignH = Qt::AlignLeft;
+                    offset = QPointF( 2, 0 );
+                }
+
+                pen = painter->pen();
+                font = painter->font();
+                pen.setColor( infoStrColor );
+                pen.setStyle( Qt::SolidLine );
+                font.setPointSizeF( infoStrPoint );
+                drawStringRawPxAling( painter, latStr, pen, font, alignH | Qt::AlignBottom, false, px, 0, offset );
+            }
         }
     }
 
     // Draw info
-    QString infoText;
+    if ( printSegmentInfoText ) {
+        QString infoText;
 
-    if ( useAlphabetText ) {
-        infoText = tr( "RA %1° to %2°, Dec %3° to %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
-    } else {
-        infoText = tr( "赤経 %1° から %2°, 赤緯 %3° から %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
+        if ( useAlphabetText ) {
+            infoText = tr( "RA %1° to %2°, Dec %3° to %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
+        } else {
+            infoText = tr( "赤経 %1° から %2°, 赤緯 %3° から %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
+        }
+
+        pen.setColor( infoStrColor );
+        pen.setStyle( Qt::SolidLine );
+        painter->setPen( pen );
+        painter->drawText( offPx.x() + mmToPx( segOffsetMm.rx(), dpi ), mmToPx( kawaHeight, dpi ) + offPx.y() + mmToPx( segOffsetMm.ry(), dpi ) + painter->fontMetrics().height() + 5, infoText );
     }
-
-    pen.setColor( infoStrColor );
-    pen.setStyle( Qt::SolidLine );
-    painter->setPen( pen );
-    painter->drawText( offPx.x() + mmToPx( segOffsetMm.rx(), dpi ), mmToPx( kawaHeight, dpi ) + offPx.y() + mmToPx( segOffsetMm.ry(), dpi ) + painter->fontMetrics().height() + 5, infoText );
-
     painter->restore();
 }
 
@@ -761,7 +768,7 @@ void CelestialSpherePrinter::paintStarCap(QPainter *painter, int edgeDE, QPointF
     }
 
     // Constellation name
-    if ( printStarNames && printConstellations ) {
+    if ( printConsteName && printConstellations ) {
         pen = painter->pen();
         font = painter->font();
         pen.setColor( consteColor );
@@ -788,7 +795,7 @@ void CelestialSpherePrinter::paintStarCap(QPainter *painter, int edgeDE, QPointF
     }
 
     // Draw messier names
-    if ( printStarNames && printMessiers ) {
+    if ( printMessierName && printMessiers ) {
         pen = painter->pen();
         font = painter->font();
         pen.setColor( messierColor );
@@ -815,31 +822,35 @@ void CelestialSpherePrinter::paintStarCap(QPainter *painter, int edgeDE, QPointF
     }
 
     // Draw RA info text
-    pen = painter->pen();
-    font = painter->font();
-    pen.setColor( infoStrColor );
-    pen.setStyle( Qt::SolidLine );
-    font.setPointSizeF( infoStrPoint );
-    auto px = pxPosOnCap( CelestialPos( 0, edgeDE ), edgeDE, inv, segOffsetMm, dpi );
-    if ( edgeDE >= 0 ) {
-        drawStringRawPxAling( painter, tr( "0h" ), pen, font, Qt::AlignBottom | Qt::AlignHCenter, false, px, -90, QPointF( 0, -5 ) );
-    } else {
-        drawStringRawPxAling( painter, tr( "0h" ), pen, font, Qt::AlignTop | Qt::AlignHCenter, false, px, +90, QPointF( 0, 5 ) );
+    if ( printCoordinateText ) {
+        pen = painter->pen();
+        font = painter->font();
+        pen.setColor( infoStrColor );
+        pen.setStyle( Qt::SolidLine );
+        font.setPointSizeF( infoStrPoint );
+        auto px = pxPosOnCap( CelestialPos( 0, edgeDE ), edgeDE, inv, segOffsetMm, dpi );
+        if ( edgeDE >= 0 ) {
+            drawStringRawPxAling( painter, tr( "0h" ), pen, font, Qt::AlignBottom | Qt::AlignHCenter, false, px, -90, QPointF( 0, -5 ) );
+        } else {
+            drawStringRawPxAling( painter, tr( "0h" ), pen, font, Qt::AlignTop | Qt::AlignHCenter, false, px, +90, QPointF( 0, 5 ) );
+        }
     }
 
     // Draw info
-    QString infoText;
+    if ( printSegmentInfoText ) {
+        QString infoText;
 
-    if ( useAlphabetText ) {
-        infoText = tr( "Dec %1° to %2°" ).arg( minDE ).arg( maxDE );
-    } else {
-        infoText = tr( "赤緯 %1° から %2°" ).arg( minDE ).arg( maxDE );
+        if ( useAlphabetText ) {
+            infoText = tr( "Dec %1° to %2°" ).arg( minDE ).arg( maxDE );
+        } else {
+            infoText = tr( "赤緯 %1° から %2°" ).arg( minDE ).arg( maxDE );
+        }
+
+        pen.setColor( infoStrColor );
+        pen.setStyle( Qt::SolidLine );
+        painter->setPen( pen );
+        painter->drawText( offPx.x() + mmToPx( segOffsetMm.rx(), dpi ), mmToPx( capRadMm, dpi ) + offPx.y() + mmToPx( segOffsetMm.ry(), dpi ) + painter->fontMetrics().height() + 10, infoText );
     }
-
-    pen.setColor( infoStrColor );
-    pen.setStyle( Qt::SolidLine );
-    painter->setPen( pen );
-    painter->drawText( offPx.x() + mmToPx( segOffsetMm.rx(), dpi ), mmToPx( capRadMm, dpi ) + offPx.y() + mmToPx( segOffsetMm.ry(), dpi ) + painter->fontMetrics().height() + 10, infoText );
 
     painter->restore();
 }
