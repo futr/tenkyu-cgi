@@ -35,6 +35,9 @@ void CGIResponse::doResponse()
     int drawConste  = uq.queryItemValue( "conste" ).toUInt();
     int drawMessier = uq.queryItemValue( "messier" ).toUInt();
     int drawObsLine = uq.queryItemValue( "obsline" ).toUInt();
+    auto starColor = QColor( uq.queryItemValue( "sclr" ) );
+    auto consteColor = QColor( uq.queryItemValue( "cclr" ) );
+    auto messierColor = QColor( uq.queryItemValue( "mclr" ) );
 
     // roundup
     eng = qMax( 0, eng );
@@ -96,6 +99,10 @@ void CGIResponse::doResponse()
     cp.consteNamePoint = consteNameSize;
     cp.messierNamePoint = messierNameSize;
     cp.infoStrPoint = infoStrSize;
+
+    if ( starColor.isValid() ) cp.starColor = starColor;
+    if ( consteColor.isValid() ) cp.starColor = consteColor;
+    if ( messierColor.isValid() ) cp.starColor = messierColor;
 
     // Generate pdf
     QBuffer buf;
