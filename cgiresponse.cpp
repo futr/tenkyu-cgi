@@ -101,8 +101,8 @@ void CGIResponse::doResponse()
     cp.infoStrPoint = infoStrSize;
 
     if ( starColor.isValid() ) cp.starColor = starColor;
-    if ( consteColor.isValid() ) cp.starColor = consteColor;
-    if ( messierColor.isValid() ) cp.starColor = messierColor;
+    if ( consteColor.isValid() ) cp.consteColor = consteColor;
+    if ( messierColor.isValid() ) cp.messierColor = messierColor;
 
     // Generate pdf
     QBuffer buf;
