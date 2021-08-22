@@ -16,7 +16,6 @@ CGIResponse::CGIResponse(QObject *parent) : QObject(parent)
 
 void CGIResponse::doResponse()
 {
-    QTranslator trans;
     auto query = qEnvironmentVariable( "QUERY_STRING" );
     auto uq = QUrlQuery( query );
 
@@ -110,11 +109,10 @@ void CGIResponse::doResponse()
     if ( messierColor.isValid() ) cp.messierColor = messierColor;
 
     // Setup translations
-    localeStr = "ja-JP";
-    if ( !localeStr.isEmpty() ) {
+    QTranslator trans;
 
+    if ( !localeStr.isEmpty() ) {
         QString l = localeStr;
-        l.truncate( l.indexOf( "-" ) );
 
         if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
             if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
