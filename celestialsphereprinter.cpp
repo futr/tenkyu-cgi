@@ -3,7 +3,7 @@
 #include <QtMath>
 #include <QTextDocument>
 #include <QPdfWriter>
-#include <memory>
+#include <QDebug>
 
 CelestialSpherePrinter::CelestialSpherePrinter(QObject *parent) : QObject(parent)
 {
@@ -328,9 +328,9 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
                 QString latStr;
 
                 if ( useAlphabetText ) {
-                    latStr = tr( "Zenith at %1°" ).arg( static_cast<int>( obsLatitude ) );
+                    latStr = QString( "Zenith at %1°" ).arg( static_cast<int>( obsLatitude ) );
                 } else {
-                    latStr = tr( "緯度 %1°の天頂" ).arg( static_cast<int>( obsLatitude ) );
+                    latStr = tr( "Zenith at %1°" ).arg( static_cast<int>( obsLatitude ) );
                 }
 
                 auto px = mmPosOnFuneToPrintPos( mmPosOnFune( 0, qDegreesToRadians( obsLatitude ) ), dpi, dePos, segOffsetMm );
@@ -366,6 +366,38 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
         pen.setStyle( Qt::DashLine );
         painter->setPen( pen );
         painter->drawPolyline( horizonLine );
+    }
+
+    // Draw zenith at obs location by local time
+    if ( printObsPointZenith ) {
+        auto zenith = getObsPointZenith();
+        double zenithRA = zenith.ra;
+        double zenithDec = zenith.de;
+
+        if ( ( minRA <= zenithRA && zenithRA < maxRA ) && ( ( isNorth( dePos ) && obsLatitude >= 0 ) || ( !isNorth( dePos ) && obsLatitude < 0 ) ) ) {
+            QString latStr;
+            auto rp = radianPosOnFune( centerRA, zenithRA, zenithDec, inv );
+            double dtheta = rp.x();
+            double phi = rp.y();
+
+            if ( useAlphabetText ) {
+                latStr = QString( "Zenith at %1" ).arg( getLocalDateTime().toString( QString( "dd.MM hh:mm" ) ) );
+            } else {
+                latStr = tr( "Zenith at %1" ).arg( getLocalDateTime().toString( tr( "M/d hh:mm" ) ) );
+            }
+
+            auto px = mmPosOnFuneToPrintPos( mmPosOnFune( dtheta, phi ), dpi, dePos, segOffsetMm );
+
+            pen = painter->pen();
+            font = painter->font();
+            pen.setColor( obsPointColor );
+            pen.setStyle( Qt::SolidLine );
+            font.setPointSizeF( infoStrPoint );
+            drawStringOnFune( painter, latStr, pen, font, false, false, false, true, QPointF( 0, -1 ), dePos, dtheta, phi, dpi, segOffsetMm );
+            // drawStringRawPxAling( painter, latStr, pen, font, Qt::AlignHCenter | Qt::AlignBottom, false, px, 0, QPointF( 0, -2 ) );
+            pen.setWidthF( 1 );
+            drawCrossToRawPx( painter, px, 8, 8, pen );
+        }
     }
 
     // Draw constellation lines
@@ -518,9 +550,9 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             QString raDateStr;
 
             if ( useAlphabetText ) {
-                raDateStr = tr( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
+                raDateStr = QString( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
             } else {
-                raDateStr = tr( "%1/20 %2時" ).arg( raMonth ).arg( timeBase + 20 );
+                raDateStr = tr( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
             }
 
             auto rp = radianPosOnFune( centerRA, raH * 15, 0, inv );
@@ -587,9 +619,9 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
         QString infoText;
 
         if ( useAlphabetText ) {
-            infoText = tr( "RA %1° to %2°, Dec %3° to %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
+            infoText = QString( "RA %1° to %2°, Dec %3° to %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
         } else {
-            infoText = tr( "赤経 %1° から %2°, 赤緯 %3° から %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
+            infoText = tr( "RA %1° to %2°, Dec %3° to %4°" ).arg( minRA ).arg( maxRA ).arg( minDE ).arg( maxDE );
         }
 
         pen.setColor( infoStrColor );
@@ -841,9 +873,9 @@ void CelestialSpherePrinter::paintStarCap(QPainter *painter, int edgeDE, QPointF
         QString infoText;
 
         if ( useAlphabetText ) {
-            infoText = tr( "Dec %1° to %2°" ).arg( minDE ).arg( maxDE );
+            infoText = QString( "Dec %1° to %2°" ).arg( minDE ).arg( maxDE );
         } else {
-            infoText = tr( "赤緯 %1° から %2°" ).arg( minDE ).arg( maxDE );
+            infoText = tr( "Dec %1° to %2°" ).arg( minDE ).arg( maxDE );
         }
 
         pen.setColor( infoStrColor );
@@ -892,7 +924,6 @@ void CelestialSpherePrinter::drawCrossToRawPx(QPainter *p, QPointF px, double w,
     p->save();
     p->setPen( pen );
     p->setBrush( Qt::NoBrush );
-    p->drawEllipse( px, w, h );
     p->drawLine( px + QPointF( -w / 2, -h / 2 ), px + QPointF( w / 2,  h / 2 ) );
     p->drawLine( px + QPointF( -w / 2,  h / 2 ), px + QPointF( w / 2, -h / 2 ) );
     p->restore();
@@ -1083,14 +1114,6 @@ void CelestialSpherePrinter::drawStringOnFune(QPainter *p, QString str, QPen pen
     // 描画
     QRectF br;
     p->drawText( textRect, Qt::AlignCenter, str, &br );
-
-    // Debug
-    /*
-    QPen lpen = p->pen();
-    lpen.setWidthF( 0.1 );
-    p->setPen( lpen );
-    p->drawRect( textRect );
-    */
 
     // 必要なら下線
     if ( drawUnderLine ) {
@@ -1391,6 +1414,88 @@ void CelestialSpherePrinter::drawCreditText(QPainter *p, QPointF offsetMm, int d
     doc.setTextWidth( r.width() );
     doc.drawContents( p, QRectF( QPointF(), QPointF( r.width(), r.height() ) ) );
     p->restore();
+}
+
+CelestialPos CelestialSpherePrinter::getObsPointZenith()
+{
+    // 指定日時の頂点の赤経を計算
+    double gst = getGST( getLocalDateTime() );
+    double localRA = obsLongitude + gst / 24 * 360;
+
+    // 360度に丸め込む
+    localRA = localRA - qFloor( localRA / 360 ) * 360;
+
+    // Use precession
+    auto r = getPrecession( CelestialPos( localRA, obsLatitude ) );
+    double newRA = localRA + ( localRA - r.ra );
+    newRA = newRA - qFloor( newRA / 360 ) * 360;
+    double newDec = obsLatitude;
+
+    return CelestialPos( newRA, newDec );
+}
+
+QDateTime CelestialSpherePrinter::getLocalDateTime()
+{
+    return obsLocalDateTime;
+}
+
+
+double CelestialSpherePrinter::getGST(QDateTime dt)
+{
+    // 日時をGST(平均春分点)に変換
+    double julianDay = getJulianDay( dt );
+    double T = 0.671262 + 1.0027379094 * ( julianDay - 2440000.5 );
+    double thetaG0 = 24.0 * ( T - quint64( T ) );
+    double GST = thetaG0;
+    return GST;
+}
+
+double CelestialSpherePrinter::getJulianDay(QDateTime dt)
+{
+    // UTC to julian day
+    auto utc = dt.toUTC();
+    auto Y = utc.date().year();
+    auto M = utc.date().month();
+    auto D = utc.date().day();
+    int JDN = qFloor( ( 1461 * ( Y + 4800 + qFloor( ( M - 14 ) / 12 ) ) ) / 4 )
+            + qFloor( ( 367 * ( M - 2 - 12 * qFloor( ( M - 14 ) / 12 ) ) ) / 12 )
+            - qFloor( ( 3 * qFloor( qFloor( Y + 4900 + ( M - 14 ) / 12 ) / 100 ) ) / 4 ) + D - 32075;
+
+    double JD = JDN + ( utc.time().hour() - 12 ) / 24.0 + utc.time().minute() / 1440.0 + utc.time().second() / 86400;
+    return JD;
+}
+
+CelestialPos CelestialSpherePrinter::getPrecession( CelestialPos pos )
+{
+    double ra = qDegreesToRadians( pos.ra );
+    double de = qDegreesToRadians( pos.de );
+
+    double l = qCos( ra ) * qCos( de );
+    double m = qSin( ra ) * qCos( de );
+    double n = qSin( de );
+
+    double t = ( getJulianDay( getLocalDateTime() )  - 2451545 ) / 36525;
+    double s0 = 2306.2181 * t + 0.30188 * t * t + 0.017998 * t * t * t;
+    double z = 2306.2181 * t + 1.09468 * t * t + 0.018203 * t * t * t;
+    double theta = 2004.3109 * t - 0.42665 * t * t - 0.041833 * t * t * t;
+
+    double coss0 = qCos( s0 / 3600 * M_PI / 180 );
+    double sins0 = qSin( s0 / 3600 * M_PI / 180 );
+    double cosz = qCos( z / 3600 * M_PI / 180 );
+    double sinz = qSin( z / 3600 * M_PI / 180 );
+    double cost = qCos( theta / 3600 * M_PI / 180 );
+    double sint = qSin( theta / 3600 * M_PI / 180 );
+
+    double l2 = ( coss0 * cosz * cost - sins0 * sinz ) * l + ( -sins0 * cosz * cost - coss0 * sinz ) * m + ( -cosz * sint ) * n;
+    double m2 = ( coss0 * sinz * cost + sins0 * cosz ) * l + ( -sins0 * sinz * cost + coss0 * cosz ) * m + ( -sinz * sint ) * n;
+    double n2 = coss0 * sint * l + ( -sins0 * sint ) * m + cost * n;
+    double a2 = qAtan2( m2, l2 );
+    double d2 = qAsin( n2 );
+
+    auto cp = CelestialPos( qRadiansToDegrees( a2 ), qRadiansToDegrees( d2 ) );
+    cp.ra = cp.ra - qFloor( cp.ra / 360 ) * 360;
+
+    return cp;
 }
 
 bool CelestialSpherePrinter::isNorth(int dePos)

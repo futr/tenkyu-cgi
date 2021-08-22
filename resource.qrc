@@ -8,4 +8,7 @@
         <file alias="hip_100.csv">data/new-starmaps/hip_100.csv</file>
         <file alias="constellation_name_utf8.csv">data/new-starmaps/constellation_name_utf8.csv</file>
     </qresource>
+    <qresource prefix="/translations">
+        <file>tenkyu_ja.qm</file>
+    </qresource>
 </RCC>

@@ -28,8 +28,8 @@ void CGIResponse::doResponse()
     int eng   = uq.queryItemValue( "eng" ).toUInt();
     int raSplit = uq.queryItemValue( "split" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
-    int southOffX = uq.queryItemValue( "sofx" ).toUInt();
-    int southOffY = uq.queryItemValue( "sofy" ).toUInt();
+    int southOffX = uq.queryItemValue( "sofx" ).toInt();
+    int southOffY = uq.queryItemValue( "sofy" ).toInt();
     int mirror = uq.queryItemValue( "mir" ).toUInt();
     int drawName    = uq.queryItemValue( "name" ).toUInt();
     int drawConste  = uq.queryItemValue( "conste" ).toUInt();
