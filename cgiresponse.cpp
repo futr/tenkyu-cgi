@@ -117,7 +117,7 @@ void CGIResponse::doResponse()
 
         if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
             if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
-                trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
+                trans.load( QLocale( QLocale::Japanese ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
             }
         }
 
