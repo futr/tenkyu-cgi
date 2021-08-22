@@ -113,9 +113,9 @@ void CGIResponse::doResponse()
         QTranslator trans;
         QString l = localeStr.replace( "-", "_" );
 
-        if ( !trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
-            if ( !trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
-                trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
+        if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
+            if ( !trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
+                trans.load( QLocale( l ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
             }
         }
 
