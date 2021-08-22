@@ -49,7 +49,7 @@ void CGIResponse::doResponse()
     int drawZenith = uq.queryItemValue( "zenith" ).toUInt();
 
     QDate obsDate = QDate::fromString( obsDateStr, Qt::ISODate );
-    QTime obsTime = QTime::fromString( obsTimeStr, "HH:mm" );
+    QTime obsTime = QTime::fromString( "20:00", "HH:mm" );
 
     // roundup
     eng = qMax( 0, eng );
