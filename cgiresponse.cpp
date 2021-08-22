@@ -16,6 +16,7 @@ CGIResponse::CGIResponse(QObject *parent) : QObject(parent)
 
 void CGIResponse::doResponse()
 {
+    QTranslator trans;
     auto query = qEnvironmentVariable( "QUERY_STRING" );
     auto uq = QUrlQuery( query );
 
@@ -111,7 +112,7 @@ void CGIResponse::doResponse()
     // Setup translations
     localeStr = "ja-JP";
     if ( !localeStr.isEmpty() ) {
-        QTranslator trans;
+
         QString l = localeStr;
         l.truncate( l.indexOf( "-" ) );
 
