@@ -44,12 +44,12 @@ void CGIResponse::doResponse()
     auto consteColor = QColor( uq.queryItemValue( "cclr" ) );
     auto messierColor = QColor( uq.queryItemValue( "mclr" ) );
     QString obsDateStr = uq.queryItemValue( "d" );
-    QString obsTimeStr = uq.queryItemValue( "t" );
+    QString obsTimeStr = uq.queryItemValue( "t", QUrl::FullyDecoded );
     int offsetFromUTC = uq.queryItemValue( "tz" ).toDouble();
     int drawZenith = uq.queryItemValue( "zenith" ).toUInt();
 
     QDate obsDate = QDate::fromString( obsDateStr, Qt::ISODate );
-    QTime obsTime = QTime::fromString( "20:00", "HH:mm" );
+    QTime obsTime = QTime::fromString( obsTimeStr, "HH:mm" );
 
     // roundup
     eng = qMax( 0, eng );
