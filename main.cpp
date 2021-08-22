@@ -35,14 +35,6 @@ int main(int argc, char *argv[])
 
     QGuiApplication a(newArgc, newArgv);
 
-    QTranslator myappTranslator;
-    if ( !myappTranslator.load( QLocale(), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
-        if ( !myappTranslator.load( QLocale(), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
-            myappTranslator.load( QLocale(), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
-        }
-    }
-    a.installTranslator( &myappTranslator );
-
     QThread cgiThread( &a );
     auto cgi = new CGIResponse();
 

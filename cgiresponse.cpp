@@ -6,6 +6,9 @@
 #include <QFile>
 #include <QCoreApplication>
 #include <QtMath>
+#include <QTranslator>
+#include <QLibraryInfo>
+#include <QGuiApplication>
 CGIResponse::CGIResponse(QObject *parent) : QObject(parent)
 {
 
@@ -17,6 +20,7 @@ void CGIResponse::doResponse()
     auto uq = QUrlQuery( query );
 
     // Parse query string
+    QString localeStr = uq.queryItemValue( "l" );
     double radius = uq.queryItemValue( "radius" ).toDouble();
     double mag    = uq.queryItemValue( "mag" ).toDouble();
     double starSize = uq.queryItemValue( "ssize" ).toDouble();
@@ -103,6 +107,19 @@ void CGIResponse::doResponse()
     if ( starColor.isValid() ) cp.starColor = starColor;
     if ( consteColor.isValid() ) cp.consteColor = consteColor;
     if ( messierColor.isValid() ) cp.messierColor = messierColor;
+
+    // Setup translations
+    if ( !localeStr.isEmpty() ) {
+        QTranslator trans;
+
+        if ( !trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLibraryInfo::location( QLibraryInfo::TranslationsPath ), QLatin1String( ".qm" ) ) ) {
+            if ( !trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( "./translations" ), QLatin1String( ".qm" ) ) ) {
+                trans.load( QLocale( localeStr ), QLatin1String( "tenkyu" ), QLatin1String( "_" ), QLatin1String( ":/translations" ), QLatin1String( ".qm" ) );
+            }
+        }
+
+        QGuiApplication::installTranslator( &trans );
+    }
 
     // Generate pdf
     QBuffer buf;
