@@ -3,7 +3,7 @@
 #include <QtMath>
 #include <QTextDocument>
 #include <QPdfWriter>
-#include <QDebug>
+#include <memory>
 
 CelestialSpherePrinter::CelestialSpherePrinter(QObject *parent) : QObject(parent)
 {
