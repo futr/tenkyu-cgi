@@ -29,6 +29,7 @@ void CGIResponse::doResponse()
     double messierNameSize = uq.queryItemValue( "mnsize" ).toDouble();
     double infoStrSize = uq.queryItemValue( "infosize" ).toDouble();
     int lat   = uq.queryItemValue( "lat" ).toDouble();
+    int lon   = uq.queryItemValue( "lon" ).toDouble();
     int eng   = uq.queryItemValue( "eng" ).toUInt();
     int raSplit = uq.queryItemValue( "split" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
@@ -42,6 +43,13 @@ void CGIResponse::doResponse()
     auto starColor = QColor( uq.queryItemValue( "sclr" ) );
     auto consteColor = QColor( uq.queryItemValue( "cclr" ) );
     auto messierColor = QColor( uq.queryItemValue( "mclr" ) );
+    QString obsDateStr = uq.queryItemValue( "d" );
+    QString obsTimeStr = uq.queryItemValue( "t" );
+    int offsetFromUTC = uq.queryItemValue( "tz" ).toDouble();
+    int drawZenith = uq.queryItemValue( "zenith" ).toUInt();
+
+    QDate obsDate = QDate::fromString( obsDateStr, Qt::ISODate );
+    QTime obsTime = QTime::fromString( obsTimeStr, "HH:mm" );
 
     // roundup
     eng = qMax( 0, eng );
@@ -73,10 +81,22 @@ void CGIResponse::doResponse()
         lat = -90;
     }
 
+    if ( lon > 180 ) {
+        lon = 180;
+    } else if ( lon < -180 ) {
+        lon = -180;
+    }
+
     if ( mag > 8 ) {
          mag = 8;
     } else if ( mag < 0 ) {
         mag = 0;
+    }
+
+    if ( offsetFromUTC > 12 ) {
+        offsetFromUTC = 12;
+    } else if ( offsetFromUTC < -12 ) {
+        offsetFromUTC = -12;
     }
 
     southOffX = qMin(  300, southOffX );
@@ -88,6 +108,7 @@ void CGIResponse::doResponse()
     cp.raSplit = raSplit;
     cp.maxMagnitude = mag;
     cp.obsLatitude = lat;
+    cp.obsLongitude = lon;
     cp.useAlphabetText = eng ? true : false;
     cp.deRepeatCount = deRep;
     cp.southOffsetMm = QPointF( southOffX, southOffY );
@@ -103,6 +124,8 @@ void CGIResponse::doResponse()
     cp.consteNamePoint = consteNameSize;
     cp.messierNamePoint = messierNameSize;
     cp.infoStrPoint = infoStrSize;
+    cp.printObsPointZenith = drawZenith ? true : false;
+    cp.obsLocalDateTime = QDateTime( obsDate, obsTime, Qt::TimeSpec::OffsetFromUTC, offsetFromUTC * 60 * 60 );
 
     if ( starColor.isValid() ) cp.starColor = starColor;
     if ( consteColor.isValid() ) cp.consteColor = consteColor;
