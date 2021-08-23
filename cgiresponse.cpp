@@ -28,8 +28,8 @@ void CGIResponse::doResponse()
     double consteNameSize = uq.queryItemValue( "cnsize" ).toDouble();
     double messierNameSize = uq.queryItemValue( "mnsize" ).toDouble();
     double infoStrSize = uq.queryItemValue( "infosize" ).toDouble();
-    int lat   = uq.queryItemValue( "lat" ).toDouble();
-    int lon   = uq.queryItemValue( "lon" ).toDouble();
+    double lat   = uq.queryItemValue( "lat" ).toDouble();
+    double lon   = uq.queryItemValue( "lon" ).toDouble();
     int eng   = uq.queryItemValue( "eng" ).toUInt();
     int raSplit = uq.queryItemValue( "split" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
