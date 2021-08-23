@@ -51,6 +51,9 @@ void CGIResponse::doResponse()
     QDate obsDate = QDate::fromString( obsDateStr, Qt::ISODate );
     QTime obsTime = QTime::fromString( obsTimeStr, "HH:mm" );
 
+    if ( !obsDate.isValid() ) obsDate = cp.obsLocalDateTime.date();
+    if ( !obsTime.isValid() ) obsTime = cp.obsLocalDateTime.time();
+
     // roundup
     eng = qMax( 0, eng );
     mirror = qMax( 0, mirror );
