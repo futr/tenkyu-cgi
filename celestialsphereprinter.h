@@ -60,7 +60,7 @@ public:
     QPageSize pageSize = QPageSize( QPageSize::A4 );
     int printDPI       = 120;
     QPointF pageOffsetMm     = QPointF( 10, 10 );
-    QPointF southOffsetMm    = QPointF( 5, 5 );
+    QPointF southOffsetMm    = QPointF( 0, 0 );
     QPointF segmentOffsetMm  = QPointF( 0, 0 );
     QPointF starNameOffsetOnFuneMm    = QPointF( 1.5, 0.1 );
     QPointF consteNameOffsetOnFuneMm  = QPointF( 0, 0 );
@@ -77,7 +77,7 @@ public:
     //int obsLocalDay       = 20;
     //double obsLocalHour   = 20;
     //double obsLocalMin    = 0;
-    double starSize       = 6.5;
+    double starSize       = 7;
     double starSizeFactor = 1.30;
     int raSplit           = 6;
     int raRepeatCount     = 1;
