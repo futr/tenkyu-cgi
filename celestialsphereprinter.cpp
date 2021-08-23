@@ -3,7 +3,7 @@
 #include <QtMath>
 #include <QTextDocument>
 #include <QPdfWriter>
-#include <memory>
+#include <QDebug>
 
 CelestialSpherePrinter::CelestialSpherePrinter(QObject *parent) : QObject(parent)
 {
@@ -180,7 +180,7 @@ bool CelestialSpherePrinter::startWritePDF(QString fileName, QIODevice *dev)
     painter.end();
 
     // Report
-    emit processPage( raSplit - 1, raSplit - 1 );
+    emit processPage( 1, 1 );
 
     return true;
 }
@@ -188,16 +188,21 @@ bool CelestialSpherePrinter::startWritePDF(QString fileName, QIODevice *dev)
 void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int dePos, QPointF segOffsetMm, int dpi)
 {
     // 舟形
+
+    // Check position is valid
+    if ( raPos < 0 || raPos >= raSplit || dePos < 0 || dePos > 1 ) {
+        return;
+    }
+
     // 印刷開始
     auto offPx = mmToPx( pageOffsetMm, dpi );
-    // double kawaWidth = ( radius * 2 * M_PI ) / raSplit;
     double kawaHeight = ( radius * 2 * M_PI ) / 4;
     double alpha = 360.0 / raSplit / 2.0;
-
-    double minRA    = raPos * ( 360 / raSplit );
-    double maxRA    = ( raPos + 1 ) * ( 360 / raSplit );
-    double centerRA = raPos * ( 360 / raSplit ) + alpha;
+    double minRA    = raPos * ( 360.0 / raSplit );
+    double maxRA    = ( raPos + 1 ) * ( 360.0 / raSplit );
+    double centerRA = raPos * ( 360.0 / raSplit ) + alpha;
     double minDE, maxDE;
+    int RAGridWidth = 15;
 
     if ( isNorth( dePos ) ) {
         minDE = 0;
@@ -217,7 +222,7 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
 
     // Create Fune Frame
     for ( int d = 0; d < 2; d++ ) {
-        for ( int i = 0; i <= 90; i += deRes ) {
+        for ( int i = 0; i <= 90; i += 1 ) {
             int phi = i;
 
             QPointF p;
@@ -249,46 +254,17 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
     painter->setBrush( bgColor );
     painter->drawPolygon( waku );
 
-    // Draw grids
-    pen.setWidthF( gridLineWidth );
-    pen.setColor( gridColor );
-    pen.setStyle( Qt::DotLine );
-    painter->setBrush( Qt::NoBrush );
-    painter->setPen( pen );
+    // Draw Dec grid
+    if ( printGrid ) {
+        pen.setWidthF( gridLineWidth );
+        pen.setColor( gridColor );
+        pen.setStyle( Qt::DotLine );
+        painter->setBrush( Qt::NoBrush );
+        painter->setPen( pen );
 
-    for ( int i = 0; i <= 90; i += 10 ) {
-        int phi;
-        QPolygonF deGrid;
-
-        if ( isNorth( dePos ) ) {
-            phi = i;
-        } else {
-            phi = -i;
-        }
-
-        for ( int dtheta = -alpha; dtheta <= alpha; dtheta++ ) {
-            auto p  = mmPosOnFune( qDegreesToRadians( static_cast<double>( dtheta ) ), qDegreesToRadians( static_cast<double>( phi ) ) );
-            auto px = mmPosOnFuneToPrintPos( p, dpi, dePos, segOffsetMm );
-
-            deGrid << px;
-        }
-
-        painter->drawPolyline( deGrid );
-    }
-
-    // Draw RA grid
-    int RAGridWidth = 15;
-    pen.setWidthF( gridLineWidth );
-    pen.setColor( gridColor );
-    pen.setStyle( Qt::DotLine );
-    painter->setBrush( Qt::NoBrush );
-    painter->setPen( pen );
-
-    for ( int t = RAGridWidth; t < 360 / raSplit; t += RAGridWidth ) {
-        QPolygonF raGrid;
-
-        for ( int i = 0; i <= 90; i++ ) {
+        for ( int i = 0; i <= 90; i += 10 ) {
             int phi;
+            QPolygonF deGrid;
 
             if ( isNorth( dePos ) ) {
                 phi = i;
@@ -296,13 +272,46 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
                 phi = -i;
             }
 
-            auto p  = mmPosOnFune( qDegreesToRadians( static_cast<double>( -alpha + t ) ), qDegreesToRadians( static_cast<double>( phi ) ) );
-            auto px = mmPosOnFuneToPrintPos( p, dpi, dePos, segOffsetMm );
+            for ( double dtheta = -alpha; dtheta < alpha; dtheta += 1 ) { // NOLINT
+                deGrid << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( dtheta ), qDegreesToRadians( static_cast<double>( phi ) ) ), dpi, dePos, segOffsetMm );
+            }
 
-            raGrid << px;
+            deGrid << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( alpha ), qDegreesToRadians( static_cast<double>( phi ) ) ), dpi,  dePos, segOffsetMm );
+
+            painter->drawPolyline( deGrid );
         }
+    }
 
-        painter->drawPolyline( raGrid );
+    // Draw RA grid
+    if ( printGrid ) {
+        pen.setWidthF( gridLineWidth );
+        pen.setColor( gridColor );
+        pen.setStyle( Qt::DotLine );
+        painter->setBrush( Qt::NoBrush );
+        painter->setPen( pen );
+
+        for ( int p = 0; p <= 360; p += RAGridWidth ) {
+            if ( p < minRA || maxRA < p ) {
+                continue;
+            }
+
+            QPolygonF raGrid;
+
+            for ( int i = 0; i <= 90; i++ ) {
+                int phi;
+
+                if ( isNorth( dePos ) ) {
+                    phi = i;
+                } else {
+                    phi = -i;
+                }
+
+                auto pos = radianPosOnFune( centerRA, p, phi, inv );
+                raGrid << mmPosOnFuneToPrintPos( mmPosOnFune( pos.x(), pos.y() ), dpi, dePos, segOffsetMm );
+            }
+
+            painter->drawPolyline( raGrid );
+        }
     }
 
     // Draw Observation point latitude line
@@ -311,12 +320,13 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             // Draw zenith line
             QPolygonF latLine;
 
-            for ( int dtheta = -alpha; dtheta <= alpha; dtheta++ ) {
-                auto p  = mmPosOnFune( qDegreesToRadians( static_cast<double>( dtheta ) ), qDegreesToRadians( static_cast<double>( obsLatitude ) ) );
-                auto px = mmPosOnFuneToPrintPos( p, dpi, dePos, segOffsetMm );
-
-                latLine << px;
+            for ( double dtheta = -alpha; dtheta < alpha; dtheta += 1 ) { // NOLINT
+                latLine << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( dtheta ), qDegreesToRadians( obsLatitude ) ), dpi, dePos, segOffsetMm );
             }
+
+            latLine << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( alpha ), qDegreesToRadians( obsLatitude ) ), dpi, dePos, segOffsetMm );
+
+
             pen.setWidthF( obsPointLineWidth );
             pen.setColor( obsPointColor );
             pen.setStyle( Qt::DotLine );
@@ -354,12 +364,11 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
             horizonDec = -( 90 - qAbs( obsLatitude ) );
         }
 
-        for ( int dtheta = -alpha; dtheta <= alpha; dtheta++ ) {
-            auto p  = mmPosOnFune( qDegreesToRadians( static_cast<double>( dtheta ) ), qDegreesToRadians( static_cast<double>( horizonDec ) ) );
-            auto px = mmPosOnFuneToPrintPos( p, dpi, dePos, segOffsetMm );
-
-            horizonLine << px;
+        for ( double dtheta = -alpha; dtheta < alpha; dtheta++ ) { // NOLINT
+            horizonLine << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( dtheta ), qDegreesToRadians( horizonDec ) ), dpi, dePos, segOffsetMm );
         }
+
+        horizonLine << mmPosOnFuneToPrintPos( mmPosOnFune( qDegreesToRadians( alpha ), qDegreesToRadians( horizonDec ) ), dpi, dePos, segOffsetMm );
 
         pen.setWidthF( obsPointLineWidth );
         pen.setColor( obsPointColor );
@@ -531,8 +540,12 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
         pen.setStyle( Qt::SolidLine );
         font.setPointSizeF( infoStrPoint );
 
-        for ( int i = 0; i < 360 / raSplit / RAGridWidth; i++ ) {
-            int raH  = i + minRA / 15;
+        for ( int p = 0; p <= 360; p += 15 ) {
+            if ( p < minRA || maxRA < p ) {
+                continue;
+            }
+
+            int raH  = p / 15;
             int raBase8H = raH - 8;
 
             if ( raBase8H < 0 ) {
@@ -555,26 +568,39 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
                 raDateStr = tr( "%1/20 %2h" ).arg( raMonth ).arg( timeBase + 20 );
             }
 
-            auto rp = radianPosOnFune( centerRA, raH * 15, 0, inv );
+            auto rp = radianPosOnFune( centerRA, p, 0, inv );
             double dtheta = rp.x();
             double phi = rp.y();
             auto px = mmPosOnFuneToPrintPos( mmPosOnFune( dtheta, phi ), dpi, dePos, segOffsetMm );
 
-            int alignH;
-            QPointF offset;
+            // グリッドの分割状態で描画方法変更
+            if ( ( 360 / raSplit ) % 15 == 0 ) {
+                // 15で割り切れる
+                int alignH;
+                QPointF offset;
 
-            if ( inv ) {
-                alignH = Qt::AlignRight;
-                offset = QPointF( -2, 0 );
-            } else {
-                alignH = Qt::AlignLeft;
-                offset = QPointF( 2, 0 );
-            }
+                if ( inv ) {
+                    alignH = Qt::AlignRight;
+                    offset = QPointF( -2, 0 );
+                } else {
+                    alignH = Qt::AlignLeft;
+                    offset = QPointF( 2, 0 );
+                }
 
-            if ( isNorth( dePos ) ) {
-                drawStringRawPxAling( painter, raHStr, pen, font, Qt::AlignBottom | alignH, false, px, 0, offset );
+                if ( isNorth( dePos ) ) {
+                    drawStringRawPxAling( painter, raHStr, pen, font, Qt::AlignBottom | alignH, false, px, 0, offset );
+                } else {
+                    drawStringRawPxAling( painter, raDateStr, pen, font, Qt::AlignTop | alignH, false, px, 0, offset );
+                }
             } else {
-                drawStringRawPxAling( painter, raDateStr, pen, font, Qt::AlignTop | alignH, false, px, 0, offset );
+                // 15でわりきれない
+                auto offset = QPointF( 0.3, 0 );
+
+                if ( isNorth( dePos ) ) {
+                    drawStringOnFune( painter, raHStr, pen, font, false, false, false, 0, offset, dePos, dtheta, phi, dpi, segOffsetMm );
+                } else {
+                    drawStringOnFune( painter, raDateStr, pen, font, false, false, false, 0, offset, dePos, dtheta, phi, dpi, segOffsetMm );
+                }
             }
         }
 
@@ -609,7 +635,20 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
                 pen.setColor( infoStrColor );
                 pen.setStyle( Qt::SolidLine );
                 font.setPointSizeF( infoStrPoint );
-                drawStringRawPxAling( painter, latStr, pen, font, alignH | Qt::AlignBottom, false, px, 0, offset );
+
+                // 真ん中にグリッド線がある場合とそれ以外で分ける
+                if ( ( ( 360 / raSplit ) % 15 == 0 ) && ( ( 360 / raSplit / 15 ) % 2 == 0 ) ) {
+                    // 真ん中にグリッド線がある
+                    drawStringRawPxAling( painter, latStr, pen, font, alignH | Qt::AlignBottom, false, px, 0, offset );
+                } else {
+                    // 真ん中にグリッド線がない
+                    // はじに書く場合
+                    // double theta = inv ? qDegreesToRadians( -alpha ) : qDegreesToRadians( alpha );
+                    // double phi = qDegreesToRadians( dec );
+                    // drawStringOnFune( painter, latStr, pen, font, false, false, false, 0, QPointF( 0.3, 0 ), dePos, theta, phi, dpi, segOffsetMm );
+                    // 真ん中に書く場合
+                    drawStringRawPxAling( painter, latStr, pen, font, Qt::AlignHCenter | Qt::AlignBottom, false, px, 0, mmToPx( QPointF( 0.3, 0 ), dpi ) );
+                }
             }
         }
     }
@@ -674,46 +713,50 @@ void CelestialSpherePrinter::paintStarCap(QPainter *painter, int edgeDE, QPointF
     painter->drawPolygon( waku );
 
     // Draw grids
-    pen.setWidthF( gridLineWidth );
-    pen.setColor( gridColor );
-    pen.setStyle( Qt::DotLine );
-    painter->setBrush( Qt::NoBrush );
-    painter->setPen( pen );
+    if ( printGrid ) {
+        pen.setWidthF( gridLineWidth );
+        pen.setColor( gridColor );
+        pen.setStyle( Qt::DotLine );
+        painter->setBrush( Qt::NoBrush );
+        painter->setPen( pen );
 
-    for ( int i = 0; i <= 90 - absEdgeDE; i += 10 ) {
-        double currentRadMm = qSin( qDegreesToRadians( static_cast<double>( i ) ) ) * radius;
-        QPolygonF deGrid;
+        for ( int i = 0; i <= 90 - absEdgeDE; i += 10 ) {
+            double currentRadMm = qSin( qDegreesToRadians( static_cast<double>( i ) ) ) * radius;
+            QPolygonF deGrid;
 
-        for ( int ra = 0; ra <= 360; ++ra ) {
-            double raRad = qDegreesToRadians( static_cast<double>( ra ) );
-            QPointF p;
+            for ( int ra = 0; ra <= 360; ++ra ) {
+                double raRad = qDegreesToRadians( static_cast<double>( ra ) );
+                QPointF p;
 
-            p = QPointF( qSin( raRad ) * currentRadMm, qCos( raRad ) * currentRadMm );
-            p = p + segOffsetMm + pageOffsetMm;
+                p = QPointF( qSin( raRad ) * currentRadMm, qCos( raRad ) * currentRadMm );
+                p = p + segOffsetMm + pageOffsetMm;
 
-            deGrid << mmToPx( p, dpi );
+                deGrid << mmToPx( p, dpi );
+            }
+
+            painter->drawPolygon( deGrid );
         }
-
-        painter->drawPolygon( deGrid );
     }
 
     // Draw RA grid
-    int RAGridWidth = 15;
-    pen.setWidthF( gridLineWidth );
-    pen.setColor( gridColor );
-    pen.setStyle( Qt::DotLine );
-    painter->setBrush( Qt::NoBrush );
-    painter->setPen( pen );
+    if ( printGrid ) {
+        int RAGridWidth = 15;
+        pen.setWidthF( gridLineWidth );
+        pen.setColor( gridColor );
+        pen.setStyle( Qt::DotLine );
+        painter->setBrush( Qt::NoBrush );
+        painter->setPen( pen );
 
-    for ( int t = 0; t <= 360; t += RAGridWidth ) {
-        QPolygonF raGrid;
-        double raRad = qDegreesToRadians( static_cast<double>( t ) );
-        QPointF raGridCenter = segOffsetMm + pageOffsetMm;
-        QPointF raGridEdge = QPointF( qSin( raRad ) * capRadMm, qCos( raRad ) * capRadMm ) + raGridCenter;
+        for ( int t = 0; t <= 360; t += RAGridWidth ) {
+            QPolygonF raGrid;
+            double raRad = qDegreesToRadians( static_cast<double>( t ) );
+            QPointF raGridCenter = segOffsetMm + pageOffsetMm;
+            QPointF raGridEdge = QPointF( qSin( raRad ) * capRadMm, qCos( raRad ) * capRadMm ) + raGridCenter;
 
-        raGrid << mmToPx( raGridCenter, dpi ) << mmToPx( raGridEdge, dpi );
+            raGrid << mmToPx( raGridCenter, dpi ) << mmToPx( raGridEdge, dpi );
 
-        painter->drawPolyline( raGrid );
+            painter->drawPolyline( raGrid );
+        }
     }
 
     // Draw constellation lines
@@ -1170,10 +1213,10 @@ void CelestialSpherePrinter::drawLineOnFune(QPainter *p, CelestialLine line, QPo
 {
     auto p1 = line.pos[0];
     auto p2 = line.pos[1];
-    double minRA = raPos * ( 360 / raSplit );
+    double minRA = raPos * ( 360.0 / raSplit );
     // double maxRA = ( raPos + 1 ) * ( 360 / raSplit );
     double alpha = 360.0 / raSplit / 2.0;
-    double centerRA = raPos * ( 360 / raSplit ) + alpha;
+    double centerRA = raPos * ( 360.0 / raSplit ) + alpha;
     CelestialPos minRAPos, maxRAPos;
     CelestialPos startPos, endPos;
     CelestialPos startPosOnFune, endPosOnFune;

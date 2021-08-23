@@ -66,7 +66,6 @@ public:
     QPointF consteNameOffsetOnFuneMm  = QPointF( 0, 0 );
     QPointF messierNameOffsetOnFuneMm = QPointF( 1.0, 0 );
     double radius         = 128;
-    double deRes          = 1;
     double forceHeight    = 130;
     double maxMagnitude   = 8;
     double obsLatitude    = 35;
@@ -89,6 +88,7 @@ public:
     bool printStarNames       = true;
     bool printConsteName      = true;
     bool printMessierName     = true;
+    bool printGrid            = true;
     bool printConstellations  = true;
     bool printMessiers        = true;
     bool printObsPointLine    = true;
