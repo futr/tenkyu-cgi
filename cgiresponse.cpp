@@ -33,8 +33,11 @@ void CGIResponse::doResponse()
     int eng   = uq.queryItemValue( "eng" ).toUInt();
     int raSplit = uq.queryItemValue( "split" ).toUInt();
     int deRep = uq.queryItemValue( "derep" ).toUInt();
+    int raRep = uq.queryItemValue( "rarep" ).toUInt();
     int southOffX = uq.queryItemValue( "sofx" ).toInt();
     int southOffY = uq.queryItemValue( "sofy" ).toInt();
+    int segOffX = uq.queryItemValue( "ofx" ).toInt();
+    int segOffY = uq.queryItemValue( "ofy" ).toInt();
     int mirror = uq.queryItemValue( "mir" ).toUInt();
     int drawName    = uq.queryItemValue( "name" ).toUInt();
     int drawConste  = uq.queryItemValue( "conste" ).toUInt();
@@ -68,6 +71,7 @@ void CGIResponse::doResponse()
     if ( infoStrSize     < 1 || infoStrSize     > 50 ) infoStrSize = cp.infoStrPoint;
 
     if ( raSplit < 1 || raSplit > 64 ) raSplit = cp.raSplit;
+    if ( raRep < 1 || raRep > 12 ) raRep = cp.raRepeatCount;
 
     if ( deRep <= 1 ) {
         deRep = 1;
@@ -107,6 +111,9 @@ void CGIResponse::doResponse()
     southOffY = qMin(  300, southOffY );
     southOffY = qMax( -300, southOffY );
 
+    if ( segOffX < 0 || segOffX > 300 ) cp.segmentOffsetMm.x();
+    if ( segOffY < 0 || segOffY > 300 ) cp.segmentOffsetMm.y();
+
     cp.radius = radius;
     cp.raSplit = raSplit;
     cp.maxMagnitude = mag;
@@ -114,6 +121,8 @@ void CGIResponse::doResponse()
     cp.obsLongitude = lon;
     cp.useAlphabetText = eng ? true : false;
     cp.deRepeatCount = deRep;
+    cp.raRepeatCount = raRep;
+    cp.segmentOffsetMm = QPointF( segOffX, segOffY );
     cp.southOffsetMm = QPointF( southOffX, southOffY );
     cp.starSize = starSize;
     cp.inv = mirror ? true : false;
