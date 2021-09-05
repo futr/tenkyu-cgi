@@ -541,7 +541,7 @@ void CelestialSpherePrinter::paintStarFune(QPainter *painter, int raPos, int deP
         font.setPointSizeF( infoStrPoint );
 
         for ( int p = 0; p <= 360; p += 15 ) {
-            if ( p < minRA || maxRA < p ) {
+            if ( p < minRA || maxRA <= p ) {
                 continue;
             }
 
