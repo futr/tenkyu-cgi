@@ -133,17 +133,17 @@ bool CelestialSpherePrinter::startWritePDF(QString fileName, QIODevice *dev)
                 double ofx, ofy;
 
                 if ( inv ) {
-                    ofx = ( segmentOffsetMm.x() + kawaWidth ) * ( raRepeatCount - 1 - l );
+                    ofx = segmentOffsetMm.x() + ( segmentOffsetMm.x() + kawaWidth ) * ( raRepeatCount - 1 - l );
                 } else {
-                    ofx = ( segmentOffsetMm.x() + kawaWidth ) * l;
+                    ofx = segmentOffsetMm.x() + ( segmentOffsetMm.x() + kawaWidth ) * l;
                 }
 
                 if ( isNorth( dec ) ) {
-                    ofy = ( segmentOffsetMm.y() + kawaHeight ) * dec;
+                    ofy = segmentOffsetMm.y() + ( segmentOffsetMm.y() + kawaHeight ) * dec;
                     segOffsetMm = QPointF( ofx, ofy );
                 } else {
                     ofx = ofx + southOffsetMm.x();
-                    ofy = southOffsetMm.y();
+                    ofy = segmentOffsetMm.y() + southOffsetMm.y();
                     segOffsetMm = QPointF( ofx, ofy );
                 }
 
@@ -1450,8 +1450,8 @@ void CelestialSpherePrinter::drawCreditText(QPainter *p, QPointF offsetMm, int d
 
     p->save();
     QRectF r = p->window();
-    r.setTopLeft( r.topLeft() + mmToPx( offsetMm + pageOffsetMm, dpi ) );
-    r.setBottomRight( r.bottomRight() - mmToPx( pageOffsetMm, dpi ) );
+    r.setTopLeft( r.topLeft() + mmToPx( offsetMm, dpi ) );
+    r.setBottomRight( r.bottomRight() );
     // p->drawText( r, creditText );
     p->translate( r.topLeft() );
     doc.setTextWidth( r.width() );
